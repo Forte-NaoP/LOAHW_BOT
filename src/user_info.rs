@@ -1,11 +1,14 @@
 use serde_json::{self, json};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+#[derive(Serialize, Deserialize)]
 pub struct UserInfo {
     user_name: String,
     user_character: HashMap<String, u32>,
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct CharInfo {
     char_name: String,
     char_lv: u32,
@@ -40,5 +43,20 @@ impl UserInfo {
 impl CharInfo {
     pub fn new(char_name: String, char_lv: u32) -> CharInfo {
         CharInfo { char_name, char_lv }
+    }
+    pub fn char_name(&self) -> &str {
+        &self.char_name
+    }
+
+    pub fn char_name_mut(&mut self) -> &mut String {
+        &mut self.char_name
+    }
+
+    pub fn char_lv(&self) -> u32 {
+        self.char_lv
+    }
+    
+    pub fn set_char_lv(&mut self, lv: u32) {
+        self.char_lv = lv;
     }
 }

@@ -2,7 +2,7 @@ use serde_json::{self, json};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct UserInfo {
     user_name: String,
     user_character: HashMap<String, u32>,
@@ -15,6 +15,14 @@ impl UserInfo {
 
     pub fn user_name(&self) -> &str {
         &self.user_name
+    }
+
+    pub fn user_character(&self) -> &HashMap<String, u32> {
+        &self.user_character
+    }
+
+    pub fn user_character_mut(&mut self) -> &mut HashMap<String, u32> {
+        &mut self.user_character
     }
 
     pub fn to_json(&self) -> String {

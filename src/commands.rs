@@ -1,7 +1,7 @@
-use std::fmt::format;
+use std::{fmt::format, collections::HashMap};
 
-use crate::{Context, Error};
-use poise::serenity_prelude as serenity;
+use crate::{Context, Error, database_handler, user_info::{UserInfo, CharInfo, self}};
+use poise::serenity_prelude::{self as serenity, User};
 use regex::Regex;
 
 #[poise::command(prefix_command, owners_only, hide_in_help)]
@@ -23,16 +23,11 @@ pub async fn 등록(
 ) -> Result<(), Error> {
     
     let str = msg.join(" ");
+    let user_info: UserInfo = user_info_from_msg(&ctx.author().name, &str);
 
-    println!("{:?}", msg);
-
-    let parsed_msg = parse_msg(&str);
     let mut response = String::new();
-
-    for parsed in parsed_msg.iter() {
-        let s = format!("name:{}, class: {}, lv: {}\n", parsed[0], parsed[1], parsed[2]);
-        println!("{}", s);
-        response.push_str(s.as_str());
+    for (k, v) in user_info.user_character().iter() {
+        response += &format!("name: {}, class: {}, lv: {}\n", k, v.0, v.1).to_string();
     }
 
     if response.is_empty() {
@@ -41,15 +36,19 @@ pub async fn 등록(
         ctx.say(response).await?;
     }
 
+    database_handler::user_register(&ctx.data().conn, user_info).await?;
+
     Ok(())
 }
 
-fn parse_msg(msg: &String) -> Vec<Vec<&str>> {
+fn user_info_from_msg(name: &String, msg: &String) -> UserInfo {
 
-    let re = Regex::new(r"(\w+?\s+?\w+?\s+?\d+)").unwrap();
-    let parsed_msg: Vec<Vec<&str>> = re.find_iter(msg).map(|mat| {
-        mat.as_str().split(" ").collect::<Vec<&str>>()
-    }).collect();
+    let re = Regex::new(r"((?P<name>\w+?)\s+?(?P<class>\w+?)\s+?(?P<lv>\d+))").unwrap();
+    let mut charinfo: user_info::CharInfo = HashMap::new();
 
-    parsed_msg
+    for caps in re.captures_iter(msg) {
+        charinfo.insert(caps["name"].to_string(), (caps["class"].to_string(), caps["lv"].parse::<u32>().unwrap(), 0));
+    }
+
+    UserInfo::new(name.to_string(), charinfo)
 }

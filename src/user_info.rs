@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 pub type CharInfo = HashMap<String, (String, u32, u32)>;
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct UserInfo {
     user_name: String,
     user_character: CharInfo,

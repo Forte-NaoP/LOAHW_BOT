@@ -35,7 +35,7 @@ pub fn user_update(conn: &Connection, new_data: &UserInfo) -> Result<(), rusqlit
     let mut current_character = current_data.user_character_mut();
 
     for (name, lv) in new_data.user_character() {
-        current_character.insert(name.to_string(), *lv);
+        current_character.insert(name.to_string(), lv.clone());
     }
 
     conn.execute("UPDATE user SET character = (?1) WHERE name = (?2)", params![current_data.to_json(), new_data.user_name()])?;

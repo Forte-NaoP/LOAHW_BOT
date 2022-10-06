@@ -21,7 +21,7 @@ use serenity::model::{
 mod user_info;
 mod database_handler;
 mod commands;
-mod gold_calc;
+mod loa_contents;
 
 use commands::*;
 
@@ -32,9 +32,13 @@ use commands::*;
 struct General;
 
 struct DBContainer;
-
 impl TypeMapKey for DBContainer {
     type Value = Connection;
+}
+
+struct LoaContents;
+impl TypeMapKey for LoaContents {
+    type Value = loa_contents::LoaContents;
 }
 
 struct Handler;
@@ -50,8 +54,16 @@ impl EventHandler for Handler {
 async fn main() -> Result<()>{
 
     let conn = Connection::open("user.db").await?;
-
     database_handler::initialize(&conn).await?;
+
+    const END_LV: u32 = 99999;
+    let mut loacontents = loa_contents::LoaContents::new(vec![
+        (1600, END_LV, 6500), (1580, 1600, 5500),
+        (1560, END_LV, 3000), (1550, END_LV, 2000), (1540, END_LV, 5500),
+        (1520, 1560, 2500), (1500, 1550, 1500), (1490, 1540, 4500),
+        (1475, END_LV, 4500), (1460, END_LV, 4500), (1445, END_LV, 4500),
+        (1430, 1460, 2500), (1415, 1445, 2500)
+    ]);
 
     let framework = StandardFramework::new().configure(|c| c.prefix("~")).group(&GENERAL_GROUP);
 
@@ -74,6 +86,7 @@ async fn main() -> Result<()>{
     {
         let mut data = client.data.write().await;
         data.insert::<DBContainer>(conn);
+        data.insert::<LoaContents>(loacontents);
     }
     
     if let Err(why) = client.start().await {

@@ -12,9 +12,9 @@ pub struct UserInfo {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CharData {
     class: String,
-    lv: u32,
-    tot_hw: u32,
-    done_hw: u32,
+    lv: f32,
+    total_hw: u64,
+    done_hw: u64,
 }
 
 impl UserInfo {
@@ -44,11 +44,10 @@ impl UserInfo {
     pub fn to_string(&self) -> String {
         let mut result = String::new();
         for (name, charinfo) in self.user_character().iter() {
-            result.push_str(format!("name: {}, class: {}, lv: {}, income: {}\n", 
+            result.push_str(format!("name: {}, class: {}, lv: {}", 
                 name, 
                 charinfo.class(),
                 charinfo.lv(),
-                charinfo.tot_hw()
             ).as_str());
         }
         result
@@ -56,10 +55,9 @@ impl UserInfo {
 }
 
 impl CharData {
-    pub fn new(class: String, lv: u32) -> CharData {
+    pub fn new(class: String, lv: f32, total_hw: u64) -> CharData {
         CharData { 
-            class, lv, 
-            tot_hw: 0,
+            class, lv, total_hw,
             done_hw: 0,
         }
     }
@@ -67,19 +65,19 @@ impl CharData {
         &self.class
     }
 
-    pub fn lv(&self) -> u32 {
+    pub fn lv(&self) -> f32 {
         self.lv
     }
 
-    pub fn tot_hw(&self) -> u32 {
-        self.tot_hw
+    pub fn total_hw(&self) -> u64 {
+        self.total_hw
     }
 
-    pub fn done_hw(&self) -> u32 {
+    pub fn done_hw(&self) -> u64 {
         self.done_hw
     }
 
-    pub fn set_done_hw(&mut self, hw: u32) {
+    pub fn set_done_hw(&mut self, hw: u64) {
         self.done_hw |= hw;
     }
 }

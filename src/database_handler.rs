@@ -1,3 +1,5 @@
+use std::fmt::format;
+
 use tokio_rusqlite::Connection as Connection;
 use rusqlite::{Result, params, Error};
 
@@ -62,7 +64,7 @@ pub async fn character_delete(conn: &Connection, user_name:String, character_nam
     Ok(())
 }
 
-pub async fn user_query(conn: &Connection, user_name:String) -> Result<String> {
+pub async fn user_query(conn: &Connection, user_name:String) -> Result<UserInfo> {
 
     let character = conn.call(move |conn| {
         let mut stmt = conn.prepare("SELECT character FROM user WHERE name = (?1)")?;
@@ -74,7 +76,7 @@ pub async fn user_query(conn: &Connection, user_name:String) -> Result<String> {
         Ok::<_, rusqlite::Error>(character)
     }).await?;
 
-    Ok(character.to_string())
+    Ok(character)
 }
 
 pub async fn reset_by_date(conn: &Connection) -> Result<()> {

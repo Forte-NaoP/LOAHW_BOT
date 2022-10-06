@@ -1,3 +1,4 @@
+use std::ops::Range;
 pub struct LoaContents {
     contents: Vec<(u32, u32, u32)>,
 }
@@ -11,10 +12,10 @@ impl LoaContents {
         }
     }
 
-    pub fn to_integer(&self, lv: &u32) -> u64 {
+    pub fn to_integer(&self, lv: &f32) -> u64 {
         let mut value: u64 = 0;
         for (s, (l, r, _)) in self.contents.iter().enumerate() {
-            if (l..r).contains(&lv) {
+            if (*l as f32..*r as f32).contains(&lv) {
                 value |= 1 << s;
             }
         }

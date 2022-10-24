@@ -80,4 +80,8 @@ impl CharData {
     pub fn set_done_hw(&mut self, hw: u64) {
         self.done_hw |= hw;
     }
+
+    pub fn reset_done_hw(&mut self) {
+        self.done_hw = 0;
+    }
 }

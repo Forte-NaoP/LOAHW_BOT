@@ -22,12 +22,14 @@ mod user_info;
 mod database_handler;
 mod commands;
 mod loa_contents;
+mod event_handler;
+mod command_handler;
 
 use commands::*;
 
 
 #[group]
-#[commands(user_init, register, update, delete, query)]
+#[commands(user_init, register, update, delete, query, homework, reset_weekly)]
 
 struct General;
 
@@ -39,15 +41,6 @@ impl TypeMapKey for DBContainer {
 struct LoaContents;
 impl TypeMapKey for LoaContents {
     type Value = loa_contents::LoaContents;
-}
-
-struct Handler;
-
-#[async_trait]
-impl EventHandler for Handler {
-    async fn ready(&self, _: Context, ready: Ready) {
-        println!("{} is connected!", ready.user.name);
-    }
 }
 
 #[tokio::main]
@@ -79,7 +72,7 @@ async fn main() -> Result<()>{
         token, 
         intents
     )
-    .event_handler(Handler)
+    .event_handler(event_handler::event_handler::DiscordEventHandler)
     .framework(framework)
     .await
     .expect("Error creating client");

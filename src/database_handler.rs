@@ -1,27 +1,27 @@
+use rusqlite::ffi::Error;
 use serde::Serialize;
 use tokio_rusqlite::Connection as Connection;
 use rusqlite::{Result, params};
 use chrono::{DateTime, Datelike, TimeZone, Timelike, Utc, Weekday, Date, NaiveDateTime, Duration};
 use chrono_tz::Asia::Seoul;
 use chrono_tz::Tz;
+use log::{error, info, warn};
 
 use super::user_info::UserInfo;
 
 pub async fn initialize(conn: &Connection) -> Result<()> {
     conn.call(|conn| {
-        let mut create_table = conn.prepare("CREATE TABLE IF NOT EXISTS ?1 (
-            ?2 text primary key,
-            ?3 text")
-            .unwrap();
-        create_table.execute(params!["user", "name", "character"]).unwrap();
-        create_table.execute(params!["timeline", "tense", "rfc_str"]).unwrap();
+
+        conn.execute("CREATE TABLE IF NOT EXISTS user (name text primary key, character text)", params![]).unwrap();
+        conn.execute("CREATE TABLE IF NOT EXISTS timeline (tense text primary key, rfc_str text)", params![]).unwrap();
+
         conn.execute(
-            "REPLACE INTO timeline (tense, rfc_str) VALUES (?1, ?2))", 
+            "REPLACE INTO timeline (tense, rfc_str) VALUES (?1, ?2)", 
             params!["last_access", Utc::now().with_timezone(&Seoul).to_rfc2822()]
         ).unwrap();
 
         conn.execute(
-            "INSERT OR IGNORE INTO timeline (tense, rfc_str) VALUES (?1, ?2))", 
+            "INSERT OR IGNORE INTO timeline (tense, rfc_str) VALUES (?1, ?2)", 
             params!["last_wed", (get_last_wed() + Duration::days(7)).to_rfc2822()]
         ).unwrap();
     }).await;
@@ -127,8 +127,11 @@ fn get_last_wed() -> DateTime<Tz> {
     if wed_num > now_num {
         diff += 3;
     }
-
-    Utc.ymd(now.year(), now.month(), now.day()-diff).and_hms(6, 0, 0).with_timezone(&Seoul)
+    
+    Utc.ymd(now.year(), now.month(), now.day())
+        .and_hms(6, 0, 0)
+        .with_timezone(&Seoul)
+        - Duration::days(diff.into())
 }
 
 pub async fn user_register(conn: &Connection, user_data: UserInfo) -> Result<()> {
@@ -151,15 +154,28 @@ pub async fn user_delete(conn: &Connection, user_name: String) -> Result<()>{
 
 pub async fn user_update(conn: &Connection, new_data: UserInfo) -> Result<()> {
     conn.call(move |conn| {
-        let current_data = get_user_data(conn, new_data.user_name());
-        let mut current_data: UserInfo = serde_json::from_str(current_data.unwrap().as_str()).unwrap();
-        let current_character = current_data.user_character_mut();
-    
-        for (name, lv) in new_data.user_character() {
-            current_character.insert(name.to_string(), lv.clone());
-        }
-    
-        conn.execute("UPDATE user SET character = (?1) WHERE name = (?2)", params![current_data.to_json(), new_data.user_name()]).unwrap();
+        match get_user_data(conn, new_data.user_name()) {
+            Ok(current_data) => {
+                let mut current_data: UserInfo = serde_json::from_str(current_data.as_str()).unwrap();
+                let current_character = current_data.user_character_mut();
+                for (name, lv) in new_data.user_character() {
+                    current_character.insert(name.to_string(), lv.clone());
+                }
+                conn.execute(
+                    "UPDATE user SET character = (?1) WHERE name = (?2)", 
+                    params![current_data.to_json(), current_data.user_name()]
+                ).unwrap();
+            },
+            Err(e) => match e {
+                rusqlite::Error::QueryReturnedNoRows => {
+                    conn.execute(
+                        "INSERT INTO user (name, character) VALUES (?1, ?2)",
+                        params![new_data.user_name(), new_data.to_json()],
+                    ).unwrap();
+                },
+                _ => error!("query failed in user_update"),
+            }, 
+        };    
     }).await;
     Ok(())
 }

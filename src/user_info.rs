@@ -12,7 +12,7 @@ pub struct UserInfo {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CharData {
     class: String,
-    lv: f32,
+    lv: f64,
     total_hw: u64,
     done_hw: u64,
 }
@@ -55,18 +55,36 @@ impl UserInfo {
 }
 
 impl CharData {
-    pub fn new(class: String, lv: f32, total_hw: u64) -> CharData {
+    pub fn from(class: String, lv: f64, total_hw: u64) -> CharData {
         CharData { 
             class, lv, total_hw,
             done_hw: 0,
         }
     }
+
+    pub fn new() -> CharData {
+        CharData {
+            class: String::from(""), 
+            lv: 0.0, 
+            total_hw: 0,
+            done_hw: 0,
+        }
+    }
+
     pub fn class(&self) -> &str {
         &self.class
     }
 
-    pub fn lv(&self) -> f32 {
+    pub fn set_class(&mut self, class: String) {
+        self.class = class;
+    }
+
+    pub fn lv(&self) -> f64 {
         self.lv
+    }
+
+    pub fn set_lv(&mut self, lv: f64) {
+        self.lv = lv;
     }
 
     pub fn total_hw(&self) -> u64 {

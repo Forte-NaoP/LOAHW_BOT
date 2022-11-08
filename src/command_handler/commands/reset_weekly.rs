@@ -26,24 +26,25 @@ use crate::{
 };
 
 
-struct CharacterDelete;
+struct ResetWeekly;
 
 pub fn command() -> Box<dyn CommandInterface + Sync + Send> {
-    Box::new(CharacterDelete)
+    Box::new(ResetWeekly)
 }
 
+
 #[async_trait]
-impl CommandInterface for CharacterDelete {
+impl CommandInterface for ResetWeekly {
     async fn run(
         &self, 
         ctx: &Context, 
         command: &ApplicationCommandInteraction, 
         options: &[CommandDataOption]
     ) -> CommandReturn {
-        let nickname = Option::<String>::from(DataWrapper::from(options, 0)).unwrap();
-        database_handler::character_delete(ctx.data.read().await.get::<DBContainer>().unwrap(), command.user.tag(), nickname).await.unwrap();
-        // 보유 캐릭터 현황 보여주기
-        command.channel_id.say(&ctx.http, format!("뿅")).await.unwrap();
+        
+        database_handler::reset_manually_one(&ctx.data.read().await.get::<DBContainer>().unwrap(), command.user.tag()).await;
+        command.channel_id.say(&ctx.http, String::from("짜잔")).await.unwrap();
+        
         CommandReturn::None
     }
 
@@ -52,13 +53,7 @@ impl CommandInterface for CharacterDelete {
         command: &'a mut CreateApplicationCommand
     ) -> &'b mut CreateApplicationCommand {
         command
-            .name("삭제")
-            .description("등록된 캐릭터 삭제")
-            .create_option(|option| {
-                option
-                    .name("캐릭터명")
-                    .kind(CommandOptionType::String)
-                    .required(true)
-            })
+            .name("숙제초기화")
+            .description("주간 숙제 수동 초기화")
     }
 }

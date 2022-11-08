@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use serenity::{
     async_trait,
     builder::CreateApplicationCommand,
@@ -6,9 +8,11 @@ use serenity::{
         CommandResult, Args,
     },
     model::{
+        application::interaction::application_command::ApplicationCommandInteraction,
         prelude::{
             Message,
-            interaction::application_command::CommandDataOption,
+            interaction::application_command::{CommandDataOption, CommandDataOptionValue},
+            command::CommandOptionType,
         },
         user::User,
     },
@@ -16,20 +20,35 @@ use serenity::{
 
 use crate::{
     database_handler, DBContainer, LoaContents, user_info::*,
-    command_handler::command_handler::*,
+    command_handler::{
+        command_handler::*,
+        command_data::*,
+        command_return::CommandReturn,
+    }
 };
 
 struct UserInit;
 
+pub fn command() -> Box<dyn CommandInterface + Sync + Send> {
+    Box::new(UserInit)
+}
+
 #[async_trait]
 impl CommandInterface for UserInit {
-    async fn run(&self, ctx: &Context, msg: &Message, options: &[CommandDataOption]) -> CommandResult {
-        database_handler::user_delete(ctx.data.read().await.get::<DBContainer>().unwrap(), msg.author.tag()).await.unwrap();
-        msg.channel_id.say(&ctx.http, format!("reset data of {}", msg.author.tag())).await.unwrap();
-        Ok(())
+    async fn run(
+        &self, 
+        ctx: &Context, 
+        command: &ApplicationCommandInteraction, 
+        options: &[CommandDataOption]
+    ) -> CommandReturn {
+        database_handler::user_delete(ctx.data.read().await.get::<DBContainer>().unwrap(), command.user.tag()).await.unwrap();
+        CommandReturn::String(format!("웅냥냥 {}", command.user.tag()))
     }
 
-    fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
+    fn register<'a: 'b, 'b>(
+        &'a self,
+        command: &'a mut CreateApplicationCommand
+    ) -> &'b mut CreateApplicationCommand {
         command
             .name("사용자초기화")
             .description("등록된 사용자 정보 초기화")

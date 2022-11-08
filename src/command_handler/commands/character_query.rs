@@ -26,24 +26,28 @@ use crate::{
 };
 
 
-struct CharacterDelete;
+struct CharacterQuery;
 
 pub fn command() -> Box<dyn CommandInterface + Sync + Send> {
-    Box::new(CharacterDelete)
+    Box::new(CharacterQuery)
 }
 
 #[async_trait]
-impl CommandInterface for CharacterDelete {
+impl CommandInterface for CharacterQuery {
     async fn run(
         &self, 
         ctx: &Context, 
         command: &ApplicationCommandInteraction, 
         options: &[CommandDataOption]
     ) -> CommandReturn {
-        let nickname = Option::<String>::from(DataWrapper::from(options, 0)).unwrap();
-        database_handler::character_delete(ctx.data.read().await.get::<DBContainer>().unwrap(), command.user.tag(), nickname).await.unwrap();
-        // 보유 캐릭터 현황 보여주기
-        command.channel_id.say(&ctx.http, format!("뿅")).await.unwrap();
+        
+        let result = database_handler::user_query(
+            &ctx.data.read().await.get::<DBContainer>().unwrap(),
+            command.user.tag(),
+        ).await;
+
+        command.channel_id.say(&ctx.http, format!("{}", msg_from_user_info(ctx, &result.unwrap()).await)).await;
+        
         CommandReturn::None
     }
 
@@ -52,13 +56,7 @@ impl CommandInterface for CharacterDelete {
         command: &'a mut CreateApplicationCommand
     ) -> &'b mut CreateApplicationCommand {
         command
-            .name("삭제")
-            .description("등록된 캐릭터 삭제")
-            .create_option(|option| {
-                option
-                    .name("캐릭터명")
-                    .kind(CommandOptionType::String)
-                    .required(true)
-            })
+            .name("조회")
+            .description("보유 캐릭터 조회")
     }
 }

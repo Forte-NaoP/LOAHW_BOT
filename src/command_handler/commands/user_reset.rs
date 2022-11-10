@@ -27,14 +27,14 @@ use crate::{
     }
 };
 
-struct UserInit;
+struct UserReset;
 
 pub fn command() -> Box<dyn CommandInterface + Sync + Send> {
-    Box::new(UserInit)
+    Box::new(UserReset)
 }
 
 #[async_trait]
-impl CommandInterface for UserInit {
+impl CommandInterface for UserReset {
     async fn run(
         &self, 
         ctx: &Context, 

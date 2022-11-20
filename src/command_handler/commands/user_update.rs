@@ -19,7 +19,7 @@ use serenity::{
 };
 
 use crate::{
-    database_handler, DBContainer, LoaContents, user_info::*,
+    database_handler, DBContainer, loa_contents::LOA_CONTENTS, user_info::*,
     command_handler::{
         command_handler::*,
         command_data::*,
@@ -42,30 +42,8 @@ impl CommandInterface for UserUpdate {
         options: &[CommandDataOption]
     ) -> CommandReturn {
         
-        let nickname = Option::<String>::from(DataWrapper::from(options, 0)).unwrap();
-        let lv = Option::<f64>::from(DataWrapper::from(options, 1)).unwrap();
-
-        let mut charinfo: CharInfo = CharInfo::new();
-        
-        let mut chardata = CharData::from(
-            String::from(""),
-            lv,
-            ctx.data.read().await.get::<LoaContents>().unwrap().to_integer(&lv)
-        );
-
-        charinfo.insert(nickname, chardata);
-
-        let userinfo = UserInfo::new(command.user.tag(), charinfo);
-
-        let result = database_handler::user_update(&ctx.data.read().await.get::<DBContainer>().unwrap(), userinfo).await;
-        match result {
-            Ok(()) => {
-                CommandReturn::String("성공".to_string())
-            },
-            Err(why) => {
-                CommandReturn::String("실패".to_string())
-            }
-        }
+        // 나중에 embed page 및 select box로 구현 
+        CommandReturn::String("미구현".to_owned())
         
     }
 
@@ -74,30 +52,8 @@ impl CommandInterface for UserUpdate {
         command: &'a mut CreateApplicationCommand
     ) -> &'b mut CreateApplicationCommand {
         command
-            .name("등록")
-            .description("보유 캐릭터 등록/추가/수정")
-            .create_option(|option| {
-                option
-                    .name("캐릭터명")
-                    .description("캐릭터명")
-                    .kind(CommandOptionType::String)
-                    .required(true)
-            })
-            .create_option(|option| {
-                option
-                    .name("레벨")
-                    .description("레벨")
-                    .kind(CommandOptionType::Number)
-                    .min_number_value(50.0)
-                    .max_number_value(9999.0)
-                    .required(true)
-            })
-            .create_option(|option| {
-                option
-                    .name("클래스")
-                    .description("클래스")
-                    .kind(CommandOptionType::String)
-            })
+            .name("수정")
+            .description("보유 캐릭터 정보 수정")
     }
 }
 

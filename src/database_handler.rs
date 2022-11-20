@@ -91,12 +91,12 @@ async fn reset_manually_all(conn: &Connection) -> Result<()> {
     Ok(())
 }
 
-pub async fn reset_manually_one(conn: &Connection, user: &String) -> Result<()> {
+pub async fn reset_manually_one(conn: &Connection, user: String) -> Result<()> {
     let mut user_info = conn.call(move |conn| {
-        let mut stmt = conn.prepare("SELECT character FROM user").unwrap();
+        let mut stmt = conn.prepare("SELECT character FROM user where name = (?1)").unwrap();
         let user_info = stmt
             .query_row(
-                params![], 
+                params![user], 
                 |row| {
                     Ok(row.get::<usize, String>(0)?)
                 }
@@ -180,7 +180,7 @@ pub async fn user_update(conn: &Connection, new_data: UserInfo) -> Result<()> {
     Ok(())
 }
 
-pub async fn character_delete(conn: &Connection, user_name:String, character_name: String) -> Result<()> {
+pub async fn character_delete(conn: &Connection, user_name: String, character_name: String) -> Result<()> {
     conn.call(move |conn| {
         let current_data = get_user_data(conn, &user_name);
         
@@ -195,7 +195,7 @@ pub async fn character_delete(conn: &Connection, user_name:String, character_nam
     Ok(())
 }
 
-pub async fn user_query(conn: &Connection, user_name:String) -> Result<UserInfo> {
+pub async fn user_query(conn: &Connection, user_name: String) -> Result<UserInfo> {
 
     let character = conn.call(move |conn| {
         let mut stmt = conn.prepare("SELECT character FROM user WHERE name = (?1)")?;

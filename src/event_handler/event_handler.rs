@@ -17,7 +17,7 @@ use serenity::{
 };
 
 use crate::{
-    database_handler, DBContainer, LoaContents, user_info::*,
+    database_handler, DBContainer, loa_contents::LOA_CONTENTS, user_info::*,
     command_handler::{
         command_handler::*,
         commands::*,

@@ -39,7 +39,7 @@ pub fn register(
 
 pub async fn run(
     ctx: &Context,
-    command: &ApplicationCommandInteraction,
+    command: ApplicationCommandInteraction,
 ) {
     command.defer(&ctx.http).await.unwrap();
 

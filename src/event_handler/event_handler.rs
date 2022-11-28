@@ -63,8 +63,8 @@ impl EventHandler for DiscordEventHandler {
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
         match interaction {
             Interaction::ApplicationCommand(command) => match command.data.name.as_str() {
-                "launch" => launch::run(&ctx, &command).await,
-                _ => execute_command(&ctx, &command).await,
+                "launch" => launch::run(&ctx, command).await,
+                _ => execute_command(&ctx, command).await,
             }
             Interaction::MessageComponent(component) => {},
             _ => {},

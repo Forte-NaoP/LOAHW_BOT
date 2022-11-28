@@ -17,9 +17,10 @@ use serenity::{
     }
 };
 
-use crate::{database_handler, user_info::*, command_handler::{commands, command_return::CommandReturn} ,DBContainer, LoaContents};
+use crate::{database_handler, user_info::*, command_handler::{commands, command_return::CommandReturn} , DBContainer, loa_contents::LOA_CONTENTS, embed_pages};
 
 use std::collections::HashMap;
+use std::sync::Arc;
 use lazy_static::lazy_static;
 use log::error;
 
@@ -57,13 +58,14 @@ impl CommandList {
 lazy_static! {
     pub static ref COMMAND_LIST: CommandList = CommandList {
         commands: HashMap::from([
-            ("등록", commands::user_update::command()),
-            ("사용자초기화", commands::user_init::command()),
+            ("조회", commands::character_query::command()),
+            ("사용자초기화", commands::user_reset::command()),
+            ("등록", commands::user_register::command()),
         ])
     };
 }
 
-pub async fn execute_command(ctx: &Context, command: &ApplicationCommandInteraction) {
+pub async fn execute_command(ctx: &Context, command: ApplicationCommandInteraction) {
 
     command.defer(&ctx.http).await.unwrap();
 
@@ -85,6 +87,37 @@ pub async fn execute_command(ctx: &Context, command: &ApplicationCommandInteract
                 error!("{:#?}", why);
             }
         }
+        CommandReturn::SingleEmbed(embed) => {
+            if let Err(why) = command
+                .edit_original_interaction_response(&ctx.http, |msg| msg.set_embed(embed.clone()))
+                .await
+            {
+                error!(
+                    "Failed to send single-embed \"{:#?}\" from command \"{}\".",
+                    embed, command.data.name
+                );
+                error!("{:#?}", why);
+            }
+        }
+        CommandReturn::EmbedPages(pages) => {
+            if let Err(why) = command
+                .edit_original_interaction_response(&ctx.http, |msg| {
+                    msg.set_embed(pages.pages[0].clone())
+            })
+                .await
+            {
+                error!(
+                    "Failed to send embed pages\"{:#?}\" from command \"{}\".",
+                    pages, command.data.name
+                );
+                error!("{:#?}", why);
+            }
+
+            if let Err(why) = embed_pages::control_pages(ctx, command, pages).await {
+                error!("an error occured while handling embed pages.");
+                error!("{:#?}", why);
+            }
+        }
         _ => ()
     }
 
@@ -97,7 +130,7 @@ pub async fn msg_from_user_info(ctx: &Context, userinfo: &UserInfo) -> String {
             name, 
             charinfo.class(),
             charinfo.lv(),
-            ctx.data.read().await.get::<LoaContents>().unwrap().cal_gold(&charinfo.total_hw()),
+            LOA_CONTENTS.cal_gold(&charinfo.total_hw())
         ).as_str());
     }
     result

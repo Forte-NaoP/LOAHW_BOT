@@ -37,17 +37,11 @@ static EMPTY_STR: &str = "\u{200b}";
 #[derive(Debug, Clone)]
 pub struct EmbedPages {
     pub pages: Vec<CreateEmbed>,
-    pub menu: CreateSelectMenu,
 }
 
 impl EmbedPages {
     pub fn from_user_info(userinfo: UserInfo) -> EmbedPages {
         let mut pages: Vec<(f64, CreateEmbed)> = vec![];
-        let mut menu = CreateSelectMenu::default();
-        menu.custom_id("character_list")
-            .placeholder("캐릭터를 선택해주세요");
-
-        let mut options = vec![];
 
         for (_name, _charinfo) in userinfo.user_character().iter() {
             let mut embed = CreateEmbed::default();
@@ -58,26 +52,13 @@ impl EmbedPages {
                     get_content_list(_charinfo)
                 );
             pages.push((_charinfo.lv, embed));
-            let mut option = CreateSelectMenuOption::default();
-            option.label(_name);
-            options.push((_charinfo.lv, option));
+            //println!("{:?}", embed.0.get("description").unwrap().as_str().unwrap().split(" ").collect::<Vec<_>>());
         }
-
-        pages.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
-        options.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
-
-        let pages = pages.iter().map(|(a, b)| b.to_owned()).collect::<Vec<_>>();
-        let mut options = options.iter().map(|(a, b)| b.to_owned()).collect::<Vec<_>>();
         
-        for (idx, option) in options.iter_mut().enumerate() {
-            option.value(idx);
-        }
+        pages.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
+        let pages = pages.iter().map(|(a, b)| b.to_owned()).collect::<Vec<_>>();
 
-        menu.options(move |f| {
-            f.set_options(options)
-        });
-        println!("{:?}\n{:?}", pages, menu);
-        EmbedPages { pages, menu }
+        EmbedPages { pages }
     }
 }
 
@@ -100,6 +81,23 @@ fn get_content_list(_charinfo: &CharData) -> Vec<(String, &str, bool)> {
     content_list.iter().map(|(a, b)| b.to_owned()).collect::<Vec<_>>()
 }
 
+fn select_menu_from_vec<D: ToString + Clone>(v: &Vec<D>) -> CreateSelectMenu {
+    let mut menu = CreateSelectMenu::default();
+    let mut options: Vec<CreateSelectMenuOption> = vec![];
+
+    for (idx, val) in v.iter().enumerate() {
+        let mut option = CreateSelectMenuOption::default();
+        option.label(val.clone()).value(idx);
+        options.push(option);
+    }
+
+    menu.options(|f| {
+        f.set_options(options)
+    }).custom_id("character_list");
+
+    menu
+}
+
 pub async fn control_pages(
     ctx: &Context, 
     interaction: ApplicationCommandInteraction, 
@@ -108,11 +106,20 @@ pub async fn control_pages(
 
     let embeds = pages.clone();
 
+    let mut names = vec![];
+    // let mut lvs = vec![];
+
+    for embed in embeds.pages.iter() {
+        names.push(embed.0.get("title").unwrap().as_str().unwrap().replace("`", ""));
+        // lvs.push(embed.0.get("description").unwrap().as_str().unwrap().split(" ").collect::<Vec<_>>()[1].to_owned());
+    }
+
+
     if let Err(why) = interaction
         .edit_original_interaction_response(&ctx.http, |interaction| {
             interaction.components(|c| {
                 c.create_action_row(|r| {
-                    r.add_select_menu(pages.menu.clone())
+                    r.add_select_menu(select_menu_from_vec(&names))
                 })
             })
         })
@@ -143,7 +150,7 @@ pub async fn control_pages(
                                 )
                                 .components(|f| {
                                     f.create_action_row(|f| {
-                                        f.add_select_menu(embeds.menu.clone())
+                                        f.add_select_menu(select_menu_from_vec(&names))
                                     })
                                 })
                             })

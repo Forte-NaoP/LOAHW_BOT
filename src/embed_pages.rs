@@ -45,18 +45,20 @@ impl EmbedPages {
 
         for (_name, _charinfo) in userinfo.user_character().iter() {
             let mut embed = CreateEmbed::default();
-            embed
-                .title(format!("```{}```", _name))
-                .description(format!("{} {}", _charinfo.class, _charinfo.lv))
-                .fields(
-                    get_content_list(_charinfo)
-                );
-            pages.push((_charinfo.lv, embed));
+            if _charinfo.lv >= 1302.0 {
+                embed
+                    .title(format!("```{}```", _name))
+                    .description(format!("{} {}", _charinfo.class, _charinfo.lv))
+                    .fields(
+                        get_content_list(_charinfo)
+                    );
+                pages.push((_charinfo.lv, embed));
+            }
             //println!("{:?}", embed.0.get("description").unwrap().as_str().unwrap().split(" ").collect::<Vec<_>>());
         }
-        
+
         pages.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
-        let pages = pages.iter().map(|(a, b)| b.to_owned()).collect::<Vec<_>>();
+        let pages = pages.iter().map(|(_, b)| b.to_owned()).collect::<Vec<_>>();
 
         EmbedPages { pages }
     }
@@ -81,13 +83,16 @@ fn get_content_list(_charinfo: &CharData) -> Vec<(String, &str, bool)> {
     content_list.iter().map(|(a, b)| b.to_owned()).collect::<Vec<_>>()
 }
 
-fn select_menu_from_vec<D: ToString + Clone>(v: &Vec<D>) -> CreateSelectMenu {
+fn select_menu_from_vec<D: ToString + Clone>(v: &Vec<D>, selected: usize) -> CreateSelectMenu {
     let mut menu = CreateSelectMenu::default();
     let mut options: Vec<CreateSelectMenuOption> = vec![];
 
     for (idx, val) in v.iter().enumerate() {
         let mut option = CreateSelectMenuOption::default();
         option.label(val.clone()).value(idx);
+        if idx == selected {
+            option.default_selection(true);
+        }
         options.push(option);
     }
 
@@ -119,7 +124,7 @@ pub async fn control_pages(
         .edit_original_interaction_response(&ctx.http, |interaction| {
             interaction.components(|c| {
                 c.create_action_row(|r| {
-                    r.add_select_menu(select_menu_from_vec(&names))
+                    r.add_select_menu(select_menu_from_vec(&names, 0))
                 })
             })
         })
@@ -150,7 +155,7 @@ pub async fn control_pages(
                                 )
                                 .components(|f| {
                                     f.create_action_row(|f| {
-                                        f.add_select_menu(select_menu_from_vec(&names))
+                                        f.add_select_menu(select_menu_from_vec(&names, idx))
                                     })
                                 })
                             })

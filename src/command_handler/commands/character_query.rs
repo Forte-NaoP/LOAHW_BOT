@@ -21,10 +21,10 @@ use crate::{
     command_handler::{
         command_handler::*,
         command_data::*,
-        command_return::CommandReturn,
-    }
+        command_return::{CommandReturn, BuildActionRow},
+    },
+    embed_pages,
 };
-
 
 struct CharacterQuery;
 
@@ -41,14 +41,16 @@ impl CommandInterface for CharacterQuery {
         options: &[CommandDataOption]
     ) -> CommandReturn {
         
-        let result = database_handler::user_query(
+        match database_handler::user_query(
             &ctx.data.read().await.get::<DBContainer>().unwrap(),
             command.user.tag(),
-        ).await;
-
-        command.channel_id.say(&ctx.http, format!("{}", msg_from_user_info(ctx, &result.unwrap()).await)).await;
-        
-        CommandReturn::None
+        ).await {
+            Ok(result) => {
+                let pages = embed_pages::EmbedPages::from_user_info(result);
+                CommandReturn::EmbedPages(pages)
+            },
+            Err(e) => CommandReturn::String("등록되지 않음".to_owned())
+        }
     }
 
     fn register<'a: 'b, 'b>(
@@ -60,3 +62,4 @@ impl CommandInterface for CharacterQuery {
             .description("보유 캐릭터 조회")
     }
 }
+

@@ -26,7 +26,7 @@ use crate::{
     command_handler::{
         command_handler::*,
         command_data::*,
-        command_return::CommandReturn,
+        command_return::{CommandReturn, ControlInteraction},
     },
     crawler::profile_parser::{self, get_character_list},
 };
@@ -52,7 +52,7 @@ impl CommandInterface for UserRegister {
 
         match get_character_list(name).await {
             Some(mut s) => character_list.append(&mut s),
-            None => return CommandReturn::String("캐릭터 없음".to_string()),
+            None => return CommandReturn::String("해당 닉네임의 캐릭터 없음".to_string()),
         }
 
         let mut charinfo: CharInfo = character_list.into_iter().collect();
@@ -62,10 +62,10 @@ impl CommandInterface for UserRegister {
         let result = database_handler::user_update(&ctx.data.read().await.get::<DBContainer>().unwrap(), userinfo).await;
         match result {
             Ok(()) => {
-                CommandReturn::String("성공".to_string())
+                CommandReturn::String("등록 성공".to_string())
             },
             Err(why) => {
-                CommandReturn::String("실패".to_string())
+                CommandReturn::String("등록 실패".to_string())
             }
         }
         
@@ -77,7 +77,7 @@ impl CommandInterface for UserRegister {
     ) -> &'b mut CreateApplicationCommand {
         command
             .name("등록")
-            .description("보유 캐릭터 등록/추가/수정")
+            .description("보유 캐릭터 등록")
             .create_option(|option| {
                 option
                     .name("캐릭터명")

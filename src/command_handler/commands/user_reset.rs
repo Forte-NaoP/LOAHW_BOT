@@ -23,7 +23,7 @@ use crate::{
     command_handler::{
         command_handler::*,
         command_data::*,
-        command_return::CommandReturn,
+        command_return::{CommandReturn, ControlInteraction},
     }
 };
 
@@ -42,7 +42,7 @@ impl CommandInterface for UserReset {
         options: &[CommandDataOption]
     ) -> CommandReturn {
         database_handler::user_delete(ctx.data.read().await.get::<DBContainer>().unwrap(), command.user.tag()).await.unwrap();
-        CommandReturn::String(format!("웅냥냥 {}", command.user.tag()))
+        CommandReturn::String(format!("{}의 보유 캐릭터 목록 삭제됨", command.user.tag()))
     }
 
     fn register<'a: 'b, 'b>(
@@ -50,7 +50,7 @@ impl CommandInterface for UserReset {
         command: &'a mut CreateApplicationCommand
     ) -> &'b mut CreateApplicationCommand {
         command
-            .name("사용자초기화")
-            .description("등록된 사용자 정보 초기화")
+            .name("초기화")
+            .description("등록된 유저 캐릭터 목록 삭제")
     }
 }

@@ -2,6 +2,8 @@ use serde_json::{self, json};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, io::Result};
 
+use crate::loa_contents::LoaContents;
+
 pub type CharInfo = HashMap<String, CharData>;
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct UserInfo {
@@ -11,8 +13,8 @@ pub struct UserInfo {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CharData {
-    class: String,
-    lv: f64,
+    pub class: String,
+    pub lv: f64,
     total_hw: u64,
     done_hw: u64,
 }
@@ -39,18 +41,6 @@ impl UserInfo {
             "user_name": self.user_name,
             "user_character": self.user_character,
         }).to_string()
-    }
-
-    pub fn to_string(&self) -> String {
-        let mut result = String::new();
-        for (name, charinfo) in self.user_character().iter() {
-            result.push_str(format!("name: {}, class: {}, lv: {}", 
-                name, 
-                charinfo.class(),
-                charinfo.lv(),
-            ).as_str());
-        }
-        result
     }
 }
 

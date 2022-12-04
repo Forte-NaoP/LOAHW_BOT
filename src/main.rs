@@ -24,6 +24,7 @@ mod loa_contents;
 mod event_handler;
 mod command_handler;
 mod crawler;
+mod utils;
 
 struct General;
 
@@ -59,7 +60,6 @@ async fn main() -> Result<()>{
     {
         let mut data = client.data.write().await;
         data.insert::<DBContainer>(conn);
-        //data.insert::<LoaContents>(loacontents);
     }
     
     if let Err(why) = client.start().await {

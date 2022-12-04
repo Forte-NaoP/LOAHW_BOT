@@ -6,6 +6,14 @@ pub struct LoaContents {
     pub contents: Vec<(u64, u64, u64)>,
 }
 
+// (idx, order for sort, name)
+pub static CONTENTS_NAME: [(i32, i32, &str); 13] = [
+    (0, 0, "일리아칸 하드"), (1, 1, "일리아칸 노말"),
+    (2, 1, "아브렐슈드 하드 5-6"), (3, 2, "아브렐슈드 하드 3-4"), (4, 3, "아브렐슈드 하드 1-2"),
+    (5, 1, "아브렐슈드 노말 5-6"), (6, 2, "아브렐슈드 노말 3-4"), (7, 3, "아브렐슈드 노말 1-2"),
+    (8, 4, "쿠크세이튼"), (9, 5, "비아키스 하드"), (10, 6, "발탄 하드"), (11, 5, "비아키스 노말"), (12, 6, "발탄 노말"),
+];
+
 lazy_static! {
     pub static ref LOA_CONTENTS: LoaContents = LoaContents { 
         contents: vec![

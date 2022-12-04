@@ -17,7 +17,15 @@ use serenity::{
     }
 };
 
-use crate::{database_handler, user_info::*, command_handler::{commands, command_return::CommandReturn} , DBContainer, loa_contents::LOA_CONTENTS, embed_pages};
+use crate::{
+    database_handler, 
+    user_info::*, 
+    command_handler::{
+        commands, 
+        command_return::{CommandReturn, ControlInteraction}
+    }, 
+    DBContainer, loa_contents::LOA_CONTENTS,
+};
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -61,6 +69,7 @@ lazy_static! {
             ("조회", commands::character_query::command()),
             ("사용자초기화", commands::user_reset::command()),
             ("등록", commands::user_register::command()),
+            //("테스트", commands::_character_query::command()),
         ])
     };
 }
@@ -99,21 +108,8 @@ pub async fn execute_command(ctx: &Context, command: ApplicationCommandInteracti
                 error!("{:#?}", why);
             }
         }
-        CommandReturn::EmbedPages(pages) => {
-            if let Err(why) = command
-                .edit_original_interaction_response(&ctx.http, |msg| {
-                    msg.set_embed(pages.pages[0].clone())
-            })
-                .await
-            {
-                error!(
-                    "Failed to send embed pages\"{:#?}\" from command \"{}\".",
-                    pages, command.data.name
-                );
-                error!("{:#?}", why);
-            }
-
-            if let Err(why) = embed_pages::control_pages(ctx, command, pages).await {
+        CommandReturn::ControlInteraction(pages) => {          
+            if let Err(why) = pages.control_interaction(ctx, command).await {
                 error!("an error occured while handling embed pages.");
                 error!("{:#?}", why);
             }
@@ -123,15 +119,3 @@ pub async fn execute_command(ctx: &Context, command: ApplicationCommandInteracti
 
 }
 
-pub async fn msg_from_user_info(ctx: &Context, userinfo: &UserInfo) -> String {
-    let mut result = String::from(userinfo.user_name());
-    for (name, charinfo) in userinfo.user_character().iter() {
-        result.push_str(format!("\n닉네임: {}, 클래스: {}, 레벨: {}, 수입: {}", 
-            name, 
-            charinfo.class(),
-            charinfo.lv(),
-            LOA_CONTENTS.cal_gold(&charinfo.total_hw())
-        ).as_str());
-    }
-    result
-}

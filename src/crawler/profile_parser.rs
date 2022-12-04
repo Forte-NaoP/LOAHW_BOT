@@ -51,7 +51,9 @@ pub async fn get_character_list(name: String) -> Option<Vec<(String, CharData)>>
     let body = res.text().await.unwrap();
     
     let mut info_fut = vec![];
-    // let mut result: Vec<(String, CharData)> = vec![];
+
+    // Html이 !Send, !Sync라서 Send Approximation 때문에 Await 이전에 소멸하게 해야함.
+    // 따라서 새로운 Scope로 감싸줌
     {
         let page = Html::parse_document(&body);
 

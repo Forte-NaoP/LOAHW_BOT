@@ -67,9 +67,9 @@ lazy_static! {
     pub static ref COMMAND_LIST: CommandList = CommandList {
         commands: HashMap::from([
             ("조회", commands::character_query::command()),
-            ("사용자초기화", commands::user_reset::command()),
+            ("초기화", commands::user_reset::command()),
             ("등록", commands::user_register::command()),
-            //("테스트", commands::_character_query::command()),
+            ("숙제관리", commands::homework_update::command()),
         ])
     };
 }
@@ -80,7 +80,7 @@ pub async fn execute_command(ctx: &Context, command: ApplicationCommandInteracti
 
     let cmd_result = match COMMAND_LIST.commands.get(command.data.name.as_str()) {
         Some(result) => result.run(&ctx, &command, &command.data.options).await,
-        None => CommandReturn::String("".to_string()),
+        None => CommandReturn::String("등록되지않은 명령어입니다.".to_string()),
     };
 
     match cmd_result {
@@ -108,7 +108,7 @@ pub async fn execute_command(ctx: &Context, command: ApplicationCommandInteracti
                 error!("{:#?}", why);
             }
         }
-        CommandReturn::ControlInteraction(pages) => {          
+        CommandReturn::ControlInteraction(mut pages) => {          
             if let Err(why) = pages.control_interaction(ctx, command).await {
                 error!("an error occured while handling embed pages.");
                 error!("{:#?}", why);

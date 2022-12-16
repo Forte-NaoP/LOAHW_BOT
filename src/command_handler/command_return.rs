@@ -29,7 +29,7 @@ pub enum CommandReturn {
 #[async_trait]
 pub trait ControlInteraction {
     async fn control_interaction(
-        &self,
+        &mut self,
         ctx: &Context, 
         interaction: ApplicationCommandInteraction, 
     ) -> Result<(), serenity::Error>;

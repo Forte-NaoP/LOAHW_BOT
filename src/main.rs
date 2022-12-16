@@ -17,6 +17,7 @@ use serenity::model::{
     application::component::{SelectMenu, ComponentType, SelectMenuOption},
     application::interaction::InteractionResponseType,
 };
+use env_logger::Env;
 
 mod user_info;
 mod database_handler;
@@ -34,7 +35,12 @@ impl TypeMapKey for DBContainer {
 }
 
 #[tokio::main]
-async fn main() -> Result<()>{
+async fn main() -> Result<()> {
+
+    let log_env = Env::default()
+        .filter_or("RUST_LOG", "error");
+
+    env_logger::init_from_env(log_env);
 
     let conn = Connection::open("user.db").await?;
     database_handler::initialize(&conn).await?;

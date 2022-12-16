@@ -28,7 +28,7 @@ use crate::{
     utils::*,
 };
 
-use std::any::Any;
+use std::{any::Any, collections::HashMap};
 use log::error;
 use std::time::Duration;
 use futures::StreamExt;
@@ -48,12 +48,17 @@ impl CommandInterface for CharacterQuery {
         options: &[CommandDataOption]
     ) -> CommandReturn {
         
+        let user_name = match Option::<User>::from(DataWrapper::from(options, 0)) {
+            Some(user) => user.tag(),
+            None => command.user.tag(),
+        };
+
         match database_handler::user_query(
             &ctx.data.read().await.get::<DBContainer>().unwrap(),
-            command.user.tag(),
+            user_name,
         ).await {
             Ok(result) => {
-                let pages = QueryResult::from_user_info(result);
+                let pages = QueryResult::new(embeds_from_user_info(&result));
                 CommandReturn::ControlInteraction(Box::new(pages))
             },
             Err(e) => CommandReturn::String("등록되지 않음".to_owned())
@@ -67,33 +72,22 @@ impl CommandInterface for CharacterQuery {
         command
             .name("조회")
             .description("보유 캐릭터 조회")
+            .create_option(|option| {
+                option
+                    .name("유저")
+                    .description("디스코드 유저명 (Ex: @loahw_bot)")
+                    .kind(CommandOptionType::User)
+                    .required(false)
+            })
     }
 }
 
 struct QueryResult {
-    pub pages: Vec<CreateEmbed>,
+    pub pages: HashMap<String, CreateEmbed>,
 }
 
 impl QueryResult {
-    pub fn from_user_info(userinfo: UserInfo) -> QueryResult {
-        let mut pages: Vec<(f64, CreateEmbed)> = vec![];
-
-        for (_name, _charinfo) in userinfo.user_character().iter() {
-            let mut embed = CreateEmbed::default();
-            if _charinfo.lv >= 1302.0 {
-                embed
-                    .title(format!("```{}```", _name))
-                    .description(format!("{} {}", _charinfo.class, _charinfo.lv))
-                    .fields(
-                        get_content_list(_charinfo)
-                    );
-                pages.push((_charinfo.lv, embed));
-            }
-        }
-
-        pages.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap());
-        let pages = pages.iter().map(|(_, b)| b.to_owned()).collect::<Vec<_>>();
-
+    pub fn new(pages: HashMap<String, CreateEmbed>) -> QueryResult {
         QueryResult { pages }
     }
 }
@@ -101,23 +95,30 @@ impl QueryResult {
 #[async_trait]
 impl ControlInteraction for QueryResult {
     async fn control_interaction(
-        &self,
+        &mut self,
         ctx: &Context, 
         interaction: ApplicationCommandInteraction, 
     ) -> Result<(), serenity::Error> {
 
-        let mut names = vec![];
+        let mut names: Vec<(String, f64)> = vec![];
 
-        for embed in self.pages.iter() {
-            names.push(embed.0.get("title").unwrap().as_str().unwrap().replace("`", ""));
+        for (name, embed) in self.pages.iter() {
+            let mut lv = embed.0.get("description").unwrap().as_str().unwrap().split_whitespace();
+            lv.next();
+            names.push((
+                name.to_owned(),
+                lv.next().unwrap().parse::<f64>().unwrap()
+            ));
         }
+        names.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        let mut names = names.iter().map(|(a, b)| a.to_owned()).collect::<Vec<_>>();
 
         if let Err(why) = interaction
             .edit_original_interaction_response(&ctx.http, |interaction| {
-                interaction.set_embed(self.pages[0].to_owned());
+                interaction.set_embed(self.pages.get(&names[0]).unwrap().to_owned());
                 interaction.components(|c| {
                     c.create_action_row(|r| {
-                        r.add_select_menu(select_menu_from_vec(&names, 0))
+                        r.add_select_menu(character_select_menu(&names, 0))
                     })
                 })
             })
@@ -132,11 +133,10 @@ impl ControlInteraction for QueryResult {
                 let mut interaction_stream = msg
                     .await_component_interactions(&ctx)
                     .timeout(Duration::from_secs(60*5))
-                    .filter(move |f| {
-                        f.message.id == msg.id && f.member.as_ref().unwrap().user.id == interaction.user.id
-                    })
+                    // .filter(move |f| {
+                    //     f.message.id == msg.id && f.member.as_ref().unwrap().user.id == interaction.user.id
+                    // })
                     .build();
-    
                 while let Some(select_option) = interaction_stream.next().await {
                     if let Err(why) = select_option
                         .create_interaction_response(&ctx.http, |r| {
@@ -144,11 +144,11 @@ impl ControlInteraction for QueryResult {
                                 .interaction_response_data(|i| {
                                     let idx = select_option.data.values[0].parse::<usize>().unwrap();
                                     i.set_embed(
-                                        self.pages[idx].to_owned()
+                                        self.pages.get(&names[idx]).unwrap().to_owned()
                                     )
                                     .components(|f| {
                                         f.create_action_row(|f| {
-                                            f.add_select_menu(select_menu_from_vec(&names, idx))
+                                            f.add_select_menu(character_select_menu(&names, idx))
                                         })
                                     })
                                 })

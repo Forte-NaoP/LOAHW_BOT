@@ -28,7 +28,7 @@ use crate::{
         command_data::*,
         command_return::{CommandReturn, ControlInteraction},
     },
-    crawler::profile_parser::{self, get_character_list},
+    crawler::profile_parser_api::*,
 };
 
 struct UserRegister;

@@ -4,7 +4,7 @@ use std::{collections::HashMap, io::Result};
 
 use crate::loa_contents::LoaContents;
 
-pub type CharInfo = HashMap<String, CharData>;
+pub type CharInfo = HashMap<String, CharacterData>;
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct UserInfo {
     user_name: String,
@@ -12,7 +12,7 @@ pub struct UserInfo {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct CharData {
+pub struct CharacterData {
     pub class: String,
     pub lv: f64,
     total_hw: u64,
@@ -44,16 +44,16 @@ impl UserInfo {
     }
 }
 
-impl CharData {
-    pub fn from(class: String, lv: f64, total_hw: u64) -> CharData {
-        CharData { 
+impl CharacterData {
+    pub fn from(class: String, lv: f64, total_hw: u64) -> CharacterData {
+        CharacterData { 
             class, lv, total_hw,
             done_hw: 0,
         }
     }
 
-    pub fn new() -> CharData {
-        CharData {
+    pub fn new() -> CharacterData {
+        CharacterData {
             class: String::from(""), 
             lv: 0.0, 
             total_hw: 0,

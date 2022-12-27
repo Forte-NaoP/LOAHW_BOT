@@ -32,7 +32,7 @@ lazy_static! {
 static BASE_URL: &str = "https://lostark.game.onstove.com/Profile/Character/";
 static USER_AGENT: &str = "User-Agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36";
 
-pub async fn get_character_list(name: String) -> Option<Vec<(String, CharData)>> {
+pub async fn get_character_list(name: String) -> Option<Vec<(String, CharacterData)>> {
 
     let client = reqwest::Client::builder()
         .danger_accept_invalid_certs(true)
@@ -78,7 +78,7 @@ pub async fn get_character_list(name: String) -> Option<Vec<(String, CharData)>>
 
 }
 
-async fn get_character_info(url: String) -> (String, CharData) {
+async fn get_character_info(url: String) -> (String, CharacterData) {
     let client = reqwest::Client::builder()
         .danger_accept_invalid_certs(true)
         .build()
@@ -89,7 +89,7 @@ async fn get_character_info(url: String) -> (String, CharData) {
 
     let (name, class, lv) = (get_name(&page), get_class(&page), get_item_lv(&page));
 
-    (name, CharData::from(class, lv, LOA_CONTENTS.get_hw(&lv)))
+    (name, CharacterData::from(class, lv, LOA_CONTENTS.get_hw(lv)))
 }
 
 fn get_name(page: &Html) -> String {

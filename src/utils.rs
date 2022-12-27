@@ -42,7 +42,7 @@ pub fn embeds_from_user_info(userinfo: &UserInfo) -> HashMap<String, CreateEmbed
     pages
 }
 
-pub fn create_fields_from_chardata(_charinfo: &CharData) -> Vec<(String, &str, bool)> {
+pub fn create_fields_from_chardata(_charinfo: &CharacterData) -> Vec<(String, &str, bool)> {
     let contents_len = CONTENTS_NAME.len();
     let mut content_list = vec![];
 
@@ -81,7 +81,7 @@ pub fn character_select_menu<D: ToString + Clone>(v: &Vec<D>, selected: usize) -
     menu
 }
 
-pub fn contents_select_menu(_char_name: &str, _char_info: &CharData) -> CreateSelectMenu {
+pub fn contents_select_menu(_char_name: &str, _char_info: &CharacterData) -> CreateSelectMenu {
     let mut menu = CreateSelectMenu::default();
     let mut options: Vec<CreateSelectMenuOption> = vec![];
 
@@ -106,7 +106,7 @@ pub fn contents_select_menu(_char_name: &str, _char_info: &CharData) -> CreateSe
     menu
 }
 
-pub fn get_contents_list(_char_info: &CharData) -> Vec<(i32, String, bool)> {
+pub fn get_contents_list(_char_info: &CharacterData) -> Vec<(i32, String, bool)> {
     let mut contents_list = vec![];
     let contents_len = CONTENTS_NAME.len();
 

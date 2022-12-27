@@ -44,8 +44,14 @@ pub async fn run(
     command.defer(&ctx.http).await.unwrap();
 
     let guild_id = command.guild_id.unwrap();
-    COMMAND_LIST.register(guild_id, ctx).await;
     
+    let local_commands = GuildId::get_application_commands(&guild_id, &ctx.http).await.unwrap();
+    for cmd in local_commands.iter() {
+        GuildId::delete_application_command(&guild_id, &ctx.http, cmd.id).await.unwrap();
+    }
+
+    COMMAND_LIST.register(guild_id, ctx).await;
+
     if let Err(why) = command
         .edit_original_interaction_response(&ctx.http, |msg| msg.content("등록 완료"))
         .await

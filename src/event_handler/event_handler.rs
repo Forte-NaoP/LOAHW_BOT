@@ -45,19 +45,6 @@ impl EventHandler for DiscordEventHandler {
                 launch::register(command)
             }).await.unwrap()
         };
-
-        let guild_id = GuildId(
-            env::var("GUILD_ID")
-                .expect("Expected GUILD_ID in environment")
-                .parse()
-                .expect("GUILD_ID must be an integer"),
-        );
-
-        let local_commands = GuildId::get_application_commands(&guild_id, &ctx.http).await.unwrap();
-        for cmd in local_commands.iter() {
-            GuildId::delete_application_command(&guild_id, &ctx.http, cmd.id).await.unwrap();
-        }
-
     }
 
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
